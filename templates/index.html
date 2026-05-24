@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocTrack - Free Document Tracking</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-file-alt text-indigo-600 text-2xl mr-3"></i>
+                    <span class="font-bold text-2xl text-gray-900">DocTrack</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center border-2 border-dashed border-indigo-200">
+            <i class="fas fa-cloud-upload-alt text-6xl text-indigo-400 mb-4"></i>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">DocTrack is Running!</h1>
+            <p class="text-gray-600 mb-4">Your document tracking platform is live.</p>
+            <div class="text-indigo-600">
+                <p><i class="fas fa-check-circle mr-2"></i>Django backend working</p>
+                <p><i class="fas fa-check-circle mr-2"></i>Frontend template loaded</p>
+                <p><i class="fas fa-check-circle mr-2"></i>Port 8000 accessible</p>
+            </div>
+            <a href="/api/" class="inline-block mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">
+                <i class="fas fa-rocket mr-2"></i>Go to API Docs
+            </a>
+        </div>
+    </main>
+</body>
+</html>
