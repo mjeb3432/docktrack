@@ -39,6 +39,9 @@ staticfiles/
 .env.local
 .env.*.local
 
+# Secrets file
+.gitignore.secrets
+
 # IDE
 .idea/
 .vscode/

@@ -1,1 +1,23 @@
-web: gunicorn doctrack.wsgi:application
+web:
+  name: docktrack
+  region: iad
+  config:
+    auto_deploy: true
+    build:
+      dockerfile: Dockerfile
+    disk:
+      name: data
+      size_gb: 3
+    env:
+      DJANGO_SECRET_KEY: generate-a-random-secret-key
+      DJANGO_DEBUG: 'false'
+      ALLOWED_HOSTS: docktrack.fly.dev
+    processes:
+      - web
+    services:
+      - name: postgres
+        engine: postgres
+        version: 15
+        config:
+          volumes:
+            - size_gb: 3
