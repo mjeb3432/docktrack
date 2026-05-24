@@ -1,0 +1,29 @@
+{
+  "$schema": "https://fly.io/release-app-schema.json",
+  "app": "docktrack",
+  "primary_region": "ams",
+  "http_service": {
+    "internal_port": 8000,
+    "force_https": true,
+    "auto_stop_machines": true,
+    "auto_start_machines": true,
+    "min_machines_running": 0,
+    "probes": [
+      {
+        "interval": "10s",
+        "timeout": "5s",
+        "type": "http",
+        "path": "/health"
+      }
+    ]
+  },
+  "env": {
+    "DATABASE_URL": "sqlite:///db.sqlite3"
+  },
+  "mounts": [
+    {
+      "source": "data",
+      "destination": "/data"
+    }
+  ]
+}
