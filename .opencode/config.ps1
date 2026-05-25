@@ -144,14 +144,13 @@ function Handle-Cmd($line) {
     return $false
 }
 
-# PSConsoleHostReadLine intercepts input BEFORE PowerShell executes it,
-# bypassing the unreliable CommandNotFoundAction mechanism in PS 5.1
+# PSConsoleHostReadLine intercepts input BEFORE PowerShell executes it.
+# Returning '' means "nothing to execute" - no CommandNotFoundAction at all.
 $executionContext.SessionState.InvokeCommand.CommandNotFoundAction = $null
 
 function PSConsoleHostReadLine {
     $line = [Microsoft.PowerShell.PSConsoleReadLine]::ReadLine()
     $t = $line.Trim()
-    
     if ($t -eq '') { return '' }
     
     # Handle slash commands
@@ -160,39 +159,25 @@ function PSConsoleHostReadLine {
         return ''
     }
     
-    # Let valid PowerShell commands through
+    # Let valid PS commands through, send rest to API
     $first = ($t -split '\s+')[0]
     if ($first) {
-        if ($first -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return $line }
+        $skip = $first -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"'
+        if ($skip) { return $line }
         $found = Get-Command $first -ErrorAction SilentlyContinue -CommandType Alias,Function,Cmdlet,Application,ExternalScript
         if ($found) { return $line }
     }
     
-    # Send to AI API via raw HTTP to avoid PS 5.1 JSON/encoding quirks
+    # Send to AI API
     try {
         $body = @{
             model = $script:M
             messages = @(@{role = 'user'; content = $t})
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
-        $req = [System.Net.WebRequest]::Create("$script:U/chat/completions")
-        $req.Method = 'POST'
-        $req.ContentType = 'application/json; charset=utf-8'
-        $req.Headers.Add('Authorization', "Bearer $script:K")
-        $req.Timeout = 30000
-        $bytes = [System.Text.Encoding]::UTF8.GetBytes($body)
-        $req.ContentLength = $bytes.Length
-        $s = $req.GetRequestStream()
-        $s.Write($bytes, 0, $bytes.Length)
-        $s.Close()
-        $resp = $req.GetResponse()
-        $sr = New-Object System.IO.StreamReader($resp.GetResponseStream(), [System.Text.Encoding]::UTF8)
-        $json = $sr.ReadToEnd()
-        $sr.Close()
-        $resp.Close()
-        $parsed = $json | ConvertFrom-Json
-        if ($parsed.choices[0].message.content) {
-            Write-Host $parsed.choices[0].message.content -ForegroundColor Green
+        $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30
+        if ($r.choices[0].message.content) {
+            Write-Host $r.choices[0].message.content -ForegroundColor Green
         }
     } catch {
         Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
