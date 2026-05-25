@@ -44,7 +44,7 @@ $script:M = $x.Model
 $script:U = $x.URL
 $script:K = $x.Key
 
-# Banner with block-style ASCII art spelling "INFERX"
+# Banner with INFERX ASCII art
 $w = $host.UI.RawUI.WindowSize.Width
 if ($w -gt 0) {
     Clear-Host
@@ -57,23 +57,18 @@ if ($w -gt 0) {
     Write-Host "  InferX" -ForegroundColor White
     Write-Host ""
     
-    # Block-style ASCII art for INFERX using Unicode shade characters
-    Write-Host "  ┌───────────────────────────────────────────────────────────┐" -ForegroundColor Gray
-    Write-Host "  │                                                           │" -ForegroundColor Gray
-    Write-Host "  │    ▓▓▓▓ ▓▓    ▓▓ ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓  ▓▓     ▓▓    │" -ForegroundColor Gray
-    Write-Host "  │     ▓▓  ▓▓▓   ▓▓ ▓▓       ▓▓       ▓▓     ▓▓  ▓▓   ▓▓     │" -ForegroundColor Gray
-    Write-Host "  │     ▓▓  ▓▓▓▓  ▓▓ ▓▓       ▓▓       ▓▓     ▓▓   ▓▓ ▓▓      │" -ForegroundColor Gray
-    Write-Host "  │     ▓▓  ▓▓ ▓▓ ▓▓ ▓▓▓▓▓▓   ▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓     ▓▓▓       │" -ForegroundColor Gray
-    Write-Host "  │     ▓▓  ▓▓  ▓▓▓▓ ▓▓       ▓▓       ▓▓   ▓▓     ▓▓ ▓▓      │" -ForegroundColor Gray
-    Write-Host "  │     ▓▓  ▓▓   ▓▓▓ ▓▓       ▓▓       ▓▓    ▓▓   ▓▓   ▓▓     │" -ForegroundColor Gray
-    Write-Host "  │    ▓▓▓▓ ▓▓    ▓▓ ▓▓       ▓▓▓▓▓▓▓▓ ▓▓     ▓▓ ▓▓     ▓▓    │" -ForegroundColor Gray
-    Write-Host "  │                                                           │" -ForegroundColor Gray
-    Write-Host "  └───────────────────────────────────────────────────────────┘" -ForegroundColor Gray
+    # Center and display INFERX logo
+    $pad = [Math]::Max(0, ([Math]::Min($w, 120) - 62) / 2)
+    Write-Host (" " * $pad + "██╗███╗   ██╗███████╗███████╗██████╗ ██╗  ██╗") -ForegroundColor Cyan
+    Write-Host (" " * $pad + "██║████╗  ██║██╔════╝██╔════╝██╔══██╗╚██╗██╔╝") -ForegroundColor Cyan
+    Write-Host (" " * $pad + "██║██╔██╗ ██║█████╗  █████╗  ██████╔╝ ╚███╔╝") -ForegroundColor Cyan
+    Write-Host (" " * $pad + "██║██║╚██╗██║██╔══╝  ██╔══╝  ██╔══██╗ ██╔██╗") -ForegroundColor Cyan
+    Write-Host (" " * $pad + "██║██║ ╚████║██║     ███████╗██║  ██║██╔╝ ██╗") -ForegroundColor Cyan
+    Write-Host (" " * $pad + "╚═╝╚═╝  ╚═══╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝") -ForegroundColor Cyan
     Write-Host ""
     
     $ht = "=" * $w
     Write-Host $ht -ForegroundColor DarkGray
-    Write-Host "  INFERX" -ForegroundColor Cyan
     Write-Host "  Model: $($x.Model)" -ForegroundColor Yellow
     Write-Host "  Provider: $($x.Id)" -ForegroundColor DarkGray
     Write-Host "  URL: $($x.URL)" -ForegroundColor DarkGray
