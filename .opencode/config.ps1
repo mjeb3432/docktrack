@@ -165,12 +165,12 @@ Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock
         return
     }
     
-    # Handle slash commands — clear buffer, accept empty line, then handle
+    # Handle slash commands — keep input visible, output below, accept
     if ($t -match '^/') {
         [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
-        [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
-        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+        Write-Host ""
         $null = Handle-Cmd $t
+        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
         return
     }
     
@@ -188,11 +188,11 @@ Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock
         }
     }
     
-    # Send to AI API — clear buffer, accept empty line, then call
+    # AI query: save to history, output AI response WHILE buffer intact
+    # (so user's input stays visible), THEN accept the line.
+    # Bare-minimum CommandNotFoundAction silences the command-not-found error.
     [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
-    [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-    
+    Write-Host ""
     try {
         $body = @{
             model = $script:M
@@ -208,4 +208,5 @@ Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock
     } catch {
         Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
     }
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
