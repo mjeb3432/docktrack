@@ -7,6 +7,16 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .upload-area {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <nav class="bg-white shadow-sm border-b border-gray-200">
@@ -20,20 +30,59 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="bg-white rounded-xl shadow-lg p-8 text-center border-2 border-dashed border-indigo-200">
-            <i class="fas fa-cloud-upload-alt text-6xl text-indigo-400 mb-4"></i>
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">DocTrack is Running!</h1>
-            <p class="text-gray-600 mb-4">Your document tracking platform is live.</p>
-            <div class="text-indigo-600">
-                <p><i class="fas fa-check-circle mr-2"></i>Django backend working</p>
-                <p><i class="fas fa-check-circle mr-2"></i>Frontend template loaded</p>
-                <p><i class="fas fa-check-circle mr-2"></i>Port 8000 accessible</p>
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="upload-area bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-gradient-to-br from-white to-indigo-50/30">
+            <i class="fas fa-upload text-8xl text-indigo-500 mb-6"></i>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Upload Your Files Here</h1>
+            <p class="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+                Securely upload documents and track who views them. Perfect for sharing contracts, presentations, and confidential files.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <i class="fas fa-chart-line text-indigo-600 text-2xl mb-2"></i>
+                    <p class="text-sm font-semibold text-gray-700">Track Views</p>
+                    <p class="text-xs text-gray-500">Monitor who opens your files</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <i class="fas fa-lock text-green-600 text-2xl mb-2"></i>
+                    <p class="text-sm font-semibold text-gray-700">Secure Sharing</p>
+                    <p class="text-xs text-gray-500">Password protection included</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <i class="fas fa-clock text-blue-600 text-2xl mb-2"></i>
+                    <p class="text-sm font-semibold text-gray-700">View Analytics</p>
+                    <p class="text-xs text-gray-500">See time spent on each page</p>
+                </div>
             </div>
-            <a href="/api/" class="inline-block mt-6 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">
-                <i class="fas fa-rocket mr-2"></i>Go to API Docs
-            </a>
+            
+            <div class="bg-white rounded-lg p-6 border border-gray-200 max-w-xl mx-auto">
+                <p class="text-sm text-gray-600 mb-4">
+                    Drag & drop your documents here or click to browse
+                </p>
+                <input type="file" id="fileInput" class="hidden">
+                <button class="inline-flex items-center bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                    <i class="fas fa-folder-open mr-2"></i>Select File to Upload
+                </button>
+            </div>
+            
+            <p class="text-sm text-gray-500 mt-8">
+                Supports PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG & more
+            </p>
         </div>
     </main>
+
+    <script>
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('fileInput');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                alert('File selected: ' + e.target.files[0].name);
+            }
+        });
+    </script>
 </body>
 </html>

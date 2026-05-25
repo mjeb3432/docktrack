@@ -21,6 +21,7 @@ RUN python manage.py collectstatic --noinput
 
 # Create entrypoint script
 RUN printf '#!/bin/bash\n\
+export PORT=${PORT:-8000}\n\
 python manage.py migrate --noinput\n\
 gunicorn doctrack.wsgi:application --bind 0.0.0.0:$PORT\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh

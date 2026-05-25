@@ -36,7 +36,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-1r=afz9@wq-uns
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 # Parse ALLOWED_HOSTS from environment variable
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,.fly.dev').split(',')
 
 
 # Application definition
