@@ -165,11 +165,11 @@ Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock
         return
     }
     
-    # Handle slash commands — cancel line so PS never executes
+    # Handle slash commands — clear buffer, accept empty line, then handle
     if ($t -match '^/') {
         [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
         [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
-        [Microsoft.PowerShell.PSConsoleReadLine]::CancelLine()
+        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
         $null = Handle-Cmd $t
         return
     }
@@ -188,10 +188,10 @@ Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock
         }
     }
     
-    # Send to AI API — cancel line first, then call
+    # Send to AI API — clear buffer, accept empty line, then call
     [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
     [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::CancelLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
     
     try {
         $body = @{
