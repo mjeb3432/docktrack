@@ -144,35 +144,40 @@ function Handle-Cmd($line) {
     return $false
 }
 
-# PSConsoleHostReadLine intercepts input BEFORE PowerShell executes it.
-# Returning '' means "nothing to execute" - no CommandNotFoundAction at all.
-$executionContext.SessionState.InvokeCommand.CommandNotFoundAction = $null
-
-function PSConsoleHostReadLine {
-    $line = [Microsoft.PowerShell.PSConsoleReadLine]::ReadLine()
-    $t = $line.Trim()
-    if ($t -eq '') { return '' }
+# CommandNotFoundAction with re-entry guard for PS 5.1 double-fire bug.
+# First invocation handles the command. The inevitable second invocation
+# (PS 5.1 ignores StopSearch on first call) just resets the guard
+# and suppresses the error silently.
+$script:inAction = $false
+$executionContext.SessionState.InvokeCommand.CommandNotFoundAction = {
+    param($sender, $e)
+    
+    # Second invocation: reset guard, suppress error, done
+    if ($script:inAction) {
+        $script:inAction = $false
+        $e.StopSearch = $true
+        return
+    }
+    
+    $cmd = $e.CommandName
+    $txt = $MyInvocation.Line.Trim()
     
     # Handle slash commands
-    if ($t -match '^/') {
-        $null = Handle-Cmd $t
-        return ''
+    if ($cmd -match '^/') {
+        $h = Handle-Cmd $txt
+        if ($h) { $e.StopSearch = $true; return }
     }
     
-    # Let valid PS commands through, send rest to API
-    $first = ($t -split '\s+')[0]
-    if ($first) {
-        $skip = $first -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"'
-        if ($skip) { return $line }
-        $found = Get-Command $first -ErrorAction SilentlyContinue -CommandType Alias,Function,Cmdlet,Application,ExternalScript
-        if ($found) { return $line }
-    }
+    # Skip paths, variables, operators
+    if ($cmd -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return }
     
-    # Send to AI API
+    # Handle as AI query
+    $script:inAction = $true
+    $e.StopSearch = $true
     try {
         $body = @{
             model = $script:M
-            messages = @(@{role = 'user'; content = $t})
+            messages = @(@{role = 'user'; content = $txt})
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
         $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30
@@ -182,6 +187,5 @@ function PSConsoleHostReadLine {
     } catch {
         Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
     }
-    
-    return ''
+    # Guard stays $true — the second invocation resets it after suppressing
 }
