@@ -83,9 +83,9 @@ if ($w -gt 0) {
     Write-Host " Anything else is sent to AI API."
 }
 
-# Custom prompt - returns only the newline character
+# Custom prompt
 function prompt {
-    return "`n"
+    return "`nInferX (mikey) > "
 }
 
 # Slash command handler
@@ -144,22 +144,23 @@ function Handle-Cmd($line) {
     return $false
 }
 
-# CommandNotFoundAction - capture commands starting with /
+# CommandNotFoundAction - intercept unknown commands
 $executionContext.SessionState.InvokeCommand.CommandNotFoundAction = {
     param($sender, $e)
     $cmd = $e.CommandName
     $txt = $MyInvocation.Line.Trim()
     
-    # Handle slash commands starting with /
+    # Handle slash commands
     if ($cmd -match '^/') {
         $h = Handle-Cmd $txt
         if ($h) { $e.StopSearch = $true; return }
     }
     
-    # Skip other invalid commands
+    # Skip paths, variables, operators
     if ($cmd -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return }
     
-    # Send to AI API
+    # Handle as AI query - suppress error before API call
+    $e.StopSearch = $true
     try {
         $body = @{
             model = $script:M
@@ -167,7 +168,6 @@ $executionContext.SessionState.InvokeCommand.CommandNotFoundAction = {
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
         $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30 -ErrorAction Stop
-        if ($r.choices[0].message.content) { Write-Host $r.choices[0].message.content -ForegroundColor Green }
+        if ($r.choices[0].message.content) { Write-Host $r.choices[0].message.content -ForegroundColor Green; Write-Host "" }
     } catch { Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed }
-    $e.StopSearch = $true
 }
