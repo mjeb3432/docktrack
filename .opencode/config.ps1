@@ -144,48 +144,68 @@ function Handle-Cmd($line) {
     return $false
 }
 
-# CommandNotFoundAction with re-entry guard for PS 5.1 double-fire bug.
-# First invocation handles the command. The inevitable second invocation
-# (PS 5.1 ignores StopSearch on first call) just resets the guard
-# and suppresses the error silently.
-$script:inAction = $false
+# PSReadLine Enter key handler intercepts ALL input BEFORE PowerShell
+# looks up the command. InferX commands cancel the line so PowerShell
+# never sees them — no CommandNotFoundAction, no error.
+# Valid PS commands call AcceptLine and execute normally.
+
+# Last-resort silencer for any command that slips through
 $executionContext.SessionState.InvokeCommand.CommandNotFoundAction = {
     param($sender, $e)
+    $e.StopSearch = $true
+}
+
+Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock {
+    $line = $null; $cursor = $null
+    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
+    $t = $line.Trim()
     
-    # Second invocation: reset guard, suppress error, done
-    if ($script:inAction) {
-        $script:inAction = $false
-        $e.StopSearch = $true
+    if ($t -eq '') {
+        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
         return
     }
     
-    $cmd = $e.CommandName
-    $txt = $MyInvocation.Line.Trim()
-    
-    # Handle slash commands
-    if ($cmd -match '^/') {
-        $h = Handle-Cmd $txt
-        if ($h) { $e.StopSearch = $true; return }
+    # Handle slash commands — cancel line so PS never executes
+    if ($t -match '^/') {
+        [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
+        [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
+        [Microsoft.PowerShell.PSConsoleReadLine]::CancelLine()
+        $null = Handle-Cmd $t
+        return
     }
     
-    # Skip paths, variables, operators
-    if ($cmd -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return }
+    # Let valid PS commands through
+    $first = ($t -split '\s+')[0]
+    if ($first) {
+        if ($first -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') {
+            [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+            return
+        }
+        $found = Get-Command $first -ErrorAction SilentlyContinue -CommandType Alias,Function,Cmdlet,Application,ExternalScript
+        if ($found) {
+            [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+            return
+        }
+    }
     
-    # Handle as AI query
-    $script:inAction = $true
-    $e.StopSearch = $true
+    # Send to AI API — cancel line first, then call
+    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
+    [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::CancelLine()
+    
     try {
         $body = @{
             model = $script:M
-            messages = @(@{role = 'user'; content = $txt})
+            messages = @(@{role = 'user'; content = $t})
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
         $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30
         if ($r.choices[0].message.content) {
-            Write-Host $r.choices[0].message.content -ForegroundColor Green
+            $oc = [Console]::ForegroundColor; [Console]::ForegroundColor = 'Green'
+            [Console]::WriteLine($r.choices[0].message.content)
+            [Console]::ForegroundColor = $oc
         }
     } catch {
         Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
     }
-    # Guard stays $true — the second invocation resets it after suppressing
 }
