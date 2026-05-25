@@ -144,39 +144,59 @@ function Handle-Cmd($line) {
     return $false
 }
 
-# Re-entry guard prevents CommandNotFoundAction from firing twice (PS 5.1 bug)
-$script:inAction = $false
+# PSConsoleHostReadLine intercepts input BEFORE PowerShell executes it,
+# bypassing the unreliable CommandNotFoundAction mechanism in PS 5.1
+$executionContext.SessionState.InvokeCommand.CommandNotFoundAction = $null
 
-# CommandNotFoundAction - intercept unknown commands
-$executionContext.SessionState.InvokeCommand.CommandNotFoundAction = {
-    param($sender, $e)
-    if ($script:inAction) { return }
-    $script:inAction = $true
+function PSConsoleHostReadLine {
+    $line = [Microsoft.PowerShell.PSConsoleReadLine]::ReadLine()
+    $t = $line.Trim()
+    
+    if ($t -eq '') { return '' }
+    
+    # Handle slash commands
+    if ($t -match '^/') {
+        $null = Handle-Cmd $t
+        return ''
+    }
+    
+    # Let valid PowerShell commands through
+    $first = ($t -split '\s+')[0]
+    if ($first) {
+        if ($first -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return $line }
+        $found = Get-Command $first -ErrorAction SilentlyContinue -CommandType Alias,Function,Cmdlet,Application,ExternalScript
+        if ($found) { return $line }
+    }
+    
+    # Send to AI API via raw HTTP to avoid PS 5.1 JSON/encoding quirks
     try {
-        $cmd = $e.CommandName
-        $txt = $MyInvocation.Line.Trim()
-        
-        # Handle slash commands
-        if ($cmd -match '^/') {
-            $h = Handle-Cmd $txt
-            if ($h) { $e.StopSearch = $true; return }
-        }
-        
-        # Skip paths, variables, operators
-        if ($cmd -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return }
-        
-        # Handle as AI query - suppress error before API call
-        $e.StopSearch = $true
         $body = @{
             model = $script:M
-            messages = @(@{role = 'user'; content = $txt})
+            messages = @(@{role = 'user'; content = $t})
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
-        $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30 -ErrorAction Stop
-        if ($r.choices[0].message.content) { Write-Host $r.choices[0].message.content -ForegroundColor Green }
+        $req = [System.Net.WebRequest]::Create("$script:U/chat/completions")
+        $req.Method = 'POST'
+        $req.ContentType = 'application/json; charset=utf-8'
+        $req.Headers.Add('Authorization', "Bearer $script:K")
+        $req.Timeout = 30000
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($body)
+        $req.ContentLength = $bytes.Length
+        $s = $req.GetRequestStream()
+        $s.Write($bytes, 0, $bytes.Length)
+        $s.Close()
+        $resp = $req.GetResponse()
+        $sr = New-Object System.IO.StreamReader($resp.GetResponseStream(), [System.Text.Encoding]::UTF8)
+        $json = $sr.ReadToEnd()
+        $sr.Close()
+        $resp.Close()
+        $parsed = $json | ConvertFrom-Json
+        if ($parsed.choices[0].message.content) {
+            Write-Host $parsed.choices[0].message.content -ForegroundColor Green
+        }
     } catch {
         Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
-    } finally {
-        $script:inAction = $false
     }
+    
+    return ''
 }
