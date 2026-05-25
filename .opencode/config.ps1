@@ -144,30 +144,39 @@ function Handle-Cmd($line) {
     return $false
 }
 
+# Re-entry guard prevents CommandNotFoundAction from firing twice (PS 5.1 bug)
+$script:inAction = $false
+
 # CommandNotFoundAction - intercept unknown commands
 $executionContext.SessionState.InvokeCommand.CommandNotFoundAction = {
     param($sender, $e)
-    $cmd = $e.CommandName
-    $txt = $MyInvocation.Line.Trim()
-    
-    # Handle slash commands
-    if ($cmd -match '^/') {
-        $h = Handle-Cmd $txt
-        if ($h) { $e.StopSearch = $true; return }
-    }
-    
-    # Skip paths, variables, operators
-    if ($cmd -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return }
-    
-    # Handle as AI query - suppress error before API call
-    $e.StopSearch = $true
+    if ($script:inAction) { return }
+    $script:inAction = $true
     try {
+        $cmd = $e.CommandName
+        $txt = $MyInvocation.Line.Trim()
+        
+        # Handle slash commands
+        if ($cmd -match '^/') {
+            $h = Handle-Cmd $txt
+            if ($h) { $e.StopSearch = $true; return }
+        }
+        
+        # Skip paths, variables, operators
+        if ($cmd -match '^\.|^\\|^[a-zA-Z]:\\|^\$|^#|^\{|^@|^"') { return }
+        
+        # Handle as AI query - suppress error before API call
+        $e.StopSearch = $true
         $body = @{
             model = $script:M
             messages = @(@{role = 'user'; content = $txt})
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
         $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30 -ErrorAction Stop
-        if ($r.choices[0].message.content) { Write-Host $r.choices[0].message.content -ForegroundColor Green; Write-Host "" }
-    } catch { Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed }
+        if ($r.choices[0].message.content) { Write-Host $r.choices[0].message.content -ForegroundColor Green }
+    } catch {
+        Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
+    } finally {
+        $script:inAction = $false
+    }
 }
