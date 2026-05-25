@@ -1,4 +1,4 @@
-# INFERX Terminal PowerShell Configuration
+﻿# INFERX Terminal PowerShell Configuration
 # File: config.ps1
 # Location: %USERPROFILE%\.config\opencode\config.ps1
 
