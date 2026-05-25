@@ -57,18 +57,18 @@ if ($w -gt 0) {
     Write-Host "  InferX" -ForegroundColor White
     Write-Host ""
     
-    # Block-style ASCII art for INFERX using Unicode blocks
-    Write-Host "  ┌────────────────────────────────────────────────────────────────────┐" -ForegroundColor Gray
-    Write-Host "  │                                                                    │" -ForegroundColor Gray
-    
-    Write-Host "  │  ▒▒▒▒▒▒    ▒▒       ▒▒  ▒▒  ▒▒▒▒▒▒  ▒▒  ▒▒  ▒▒▒▒▒▒  ▒▒      ▒▒     │" -ForegroundColor Gray
-    Write-Host "  │  ▒    ▒    ▒▒       ▒▒ ▒▒  ▒    ▒  ▒▒  ▒▒ ▒      ▒▒ ▒▒          │" -ForegroundColor Gray
-    Write-Host "  │  ▒▒▒▒▒▒    ▒▒       ▒▒ ▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒▒ ▒      ▒▒ ▒▒    ▒▒    │" -ForegroundColor Gray
-    Write-Host "  │  ▒    ▒    ▒▒       ▒▒ ▒▒  ▒    ▒  ▒▒  ▒▒ ▒      ▒▒ ▒▒      ▒▒  │" -ForegroundColor Gray
-    Write-Host "  │  ▒▒▒▒▒▒    ▒▒▒▒▒▒   ▒▒  ▒▒  ▒▒▒▒▒▒  ▒▒  ▒▒  ▒▒▒▒▒▒  ▒▒▒▒▒▒ ▒▒▒▒ │" -ForegroundColor Gray
-    
-    Write-Host "  │                                                                    │" -ForegroundColor Gray
-    Write-Host "  └────────────────────────────────────────────────────────────────────┘" -ForegroundColor Gray
+    # Block-style ASCII art for INFERX using Unicode shade characters
+    Write-Host "  ┌───────────────────────────────────────────────────────────┐" -ForegroundColor Gray
+    Write-Host "  │                                                           │" -ForegroundColor Gray
+    Write-Host "  │    ▓▓▓▓ ▓▓    ▓▓ ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓  ▓▓     ▓▓    │" -ForegroundColor Gray
+    Write-Host "  │     ▓▓  ▓▓▓   ▓▓ ▓▓       ▓▓       ▓▓     ▓▓  ▓▓   ▓▓     │" -ForegroundColor Gray
+    Write-Host "  │     ▓▓  ▓▓▓▓  ▓▓ ▓▓       ▓▓       ▓▓     ▓▓   ▓▓ ▓▓      │" -ForegroundColor Gray
+    Write-Host "  │     ▓▓  ▓▓ ▓▓ ▓▓ ▓▓▓▓▓▓   ▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓     ▓▓▓       │" -ForegroundColor Gray
+    Write-Host "  │     ▓▓  ▓▓  ▓▓▓▓ ▓▓       ▓▓       ▓▓   ▓▓     ▓▓ ▓▓      │" -ForegroundColor Gray
+    Write-Host "  │     ▓▓  ▓▓   ▓▓▓ ▓▓       ▓▓       ▓▓    ▓▓   ▓▓   ▓▓     │" -ForegroundColor Gray
+    Write-Host "  │    ▓▓▓▓ ▓▓    ▓▓ ▓▓       ▓▓▓▓▓▓▓▓ ▓▓     ▓▓ ▓▓     ▓▓    │" -ForegroundColor Gray
+    Write-Host "  │                                                           │" -ForegroundColor Gray
+    Write-Host "  └───────────────────────────────────────────────────────────┘" -ForegroundColor Gray
     Write-Host ""
     
     $ht = "=" * $w
