@@ -194,16 +194,29 @@ Set-PSReadLineKeyHandler -Key Enter -BriefDescription 'InferXEnter' -ScriptBlock
     [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($t)
     Write-Host ""
     try {
-        $body = @{
+        $jsonBody = @{
             model = $script:M
             messages = @(@{role = 'user'; content = $t})
             max_tokens = 1024; temperature = 0.7
         } | ConvertTo-Json -Compress
-        $r = Invoke-RestMethod -Uri "$script:U/chat/completions" -Method Post -ContentType 'application/json' -Headers @{Authorization = "Bearer $script:K"} -Body $body -TimeoutSec 30
-        if ($r.choices[0].message.content) {
-            $oc = [Console]::ForegroundColor; [Console]::ForegroundColor = 'Green'
-            [Console]::WriteLine($r.choices[0].message.content)
-            [Console]::ForegroundColor = $oc
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($jsonBody)
+        $wr = [System.Net.WebRequest]::Create("$script:U/chat/completions")
+        $wr.Method = 'POST'
+        $wr.ContentType = 'application/json'
+        $wr.Headers.Add('Authorization', "Bearer $script:K")
+        $wr.ContentLength = $bytes.Length
+        $wr.Timeout = 30000
+        $ws = $wr.GetRequestStream()
+        $ws.Write($bytes, 0, $bytes.Length)
+        $ws.Close()
+        $rs = $wr.GetResponse()
+        $sr = New-Object System.IO.StreamReader($rs.GetResponseStream(), [System.Text.Encoding]::UTF8)
+        $json = $sr.ReadToEnd()
+        $sr.Close(); $rs.Close()
+        $parsed = $json | ConvertFrom-Json
+        if ($parsed.choices[0].message.content) {
+            [Console]::WriteLine($parsed.choices[0].message.content)
         }
     } catch {
         Write-Host ("INFERX API error: " + $_) -ForegroundColor DarkRed
